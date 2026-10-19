@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowRight, MessageSquare, BookMarked, Compass, Sparkles } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function HomePage() {
   return (
@@ -11,6 +12,18 @@ export default function HomePage() {
           <div className="flex items-center gap-2.5">
             <Image src="/logo.png" alt="Sage" width={24} height={24} />
             <span className="text-xl font-bold">Sage</span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <Link href="/login" className="text-sm font-medium text-neutral-400 hover:text-white transition-colors">
+              Sign In
+            </Link>
+            <Link
+              href="/register"
+              className="px-4 py-1.5 rounded-full bg-yellow-400 text-black font-semibold text-sm hover:bg-yellow-300 transition-colors"
+            >
+              Get Started
+            </Link>
           </div>
         </div>
       </header>
