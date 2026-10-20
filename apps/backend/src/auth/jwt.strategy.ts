@@ -10,6 +10,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly userService: UserService,
     configService: ConfigService,
   ) {
+    // This tells Passport to:
+    // Extract the token from the Authorization: Bearer ... header.
+    // Reject expired tokens.
+    // Verify the token's signature using the configured secret.
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
