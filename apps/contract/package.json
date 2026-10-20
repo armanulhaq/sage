@@ -1,0 +1,17 @@
+{
+  "name": "contract",
+  "version": "1.0.0",
+  "description": "Shared API Contracts for Sage",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@ts-rest/core": "^3.30.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}
