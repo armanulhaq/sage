@@ -67,7 +67,16 @@ export class AuthService {
     return this.sanitizeUser(user);
   }
 
-  private async generateToken(user: User): Promise<string> {
+  async validateGoogleUser(data: {
+    googleId: string;
+    email: string;
+    name: string;
+    avatar?: string | null;
+  }): Promise<User> {
+    return this.userService.findOrCreateGoogleUser(data);
+  }
+
+  async generateToken(user: User): Promise<string> {
     const payload = {
       sub: user.id,
       email: user.email,
