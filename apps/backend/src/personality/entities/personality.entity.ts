@@ -11,10 +11,9 @@ import { User } from '../../user/entities/user.entity';
 import { PersonalitySource } from './personality-source.entity';
 
 export enum PersonalityStatus {
-  PRIVATE = 'PRIVATE',                   
-  PENDING_APPROVAL = 'PENDING_APPROVAL', 
-  APPROVED = 'APPROVED',                 
-  REJECTED = 'REJECTED',                 
+  PRIVATE = 'PRIVATE',
+  PENDING_APPROVAL = 'PENDING_APPROVAL',
+  APPROVED = 'APPROVED',
 }
 
 @Entity()
