@@ -30,11 +30,6 @@ export default function HomePage() {
 
       {/* Hero */}
       <section className="pt-20 pb-16 px-6 max-w-3xl mx-auto text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-900 border border-yellow-400/30 text-yellow-400 text-xs font-medium mb-6">
-          <Sparkles className="w-3.5 h-3.5" />
-          AI Mentorship Platform
-        </div>
-
         <h1 className="text-5xl sm:text-6xl font-bold tracking-tight mb-6">
           Timeless Wisdom for <br />
           <span className="text-yellow-400">Modern Dilemmas.</span>

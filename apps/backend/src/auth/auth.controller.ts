@@ -77,6 +77,6 @@ export class AuthController {
       sameSite: 'lax',
     });
 
-    return res.redirect(`${frontendUrl}/dashboard`);
+    return res.redirect(`${frontendUrl}/mentors`);
   }
 }

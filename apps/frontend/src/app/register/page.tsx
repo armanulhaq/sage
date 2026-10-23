@@ -41,7 +41,7 @@ export default function RegisterPage() {
 
       if (res.status === 201) {
         setAuthToken(res.body.accessToken);
-        router.push('/dashboard');
+        router.push('/mentors');
       } else {
         const body = res.body as any;
         const errorMsg =

@@ -45,7 +45,7 @@ export class PersonalityService {
       },
       {
         orderBy: { createdAt: 'DESC' },
-        populate: ['creator'],
+        populate: ['creator', 'sources'],
       },
     );
 
@@ -56,7 +56,7 @@ export class PersonalityService {
     const personality = await this.em.findOne(
       Personality,
       { id },
-      { populate: ['creator'] },
+      { populate: ['creator', 'sources'] },
     );
 
     if (!personality) {
@@ -84,6 +84,7 @@ export class PersonalityService {
       status: personality.status,
       creatorId: personality.creator.id,
       creatorName: personality.creator.name,
+      sourcesCount: personality.sources?.length ?? 0,
       createdAt: personality.createdAt.toISOString(),
       updatedAt: personality.updatedAt.toISOString(),
     };
