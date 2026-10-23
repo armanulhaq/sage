@@ -31,3 +31,7 @@ pnpm-debug.log*
 .idea/
 .agents/
 agents/
+skills-lock.json
+
+# TypeScript cache
+*.tsbuildinfo
