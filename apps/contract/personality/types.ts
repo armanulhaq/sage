@@ -7,6 +7,17 @@ export const PersonalityStatusEnum = z.enum([
 ]);
 export type PersonalityStatus = z.infer<typeof PersonalityStatusEnum>;
 
+export const SourceTypeEnum = z.enum([
+  'BOOK',
+  'SPEECH',
+  'ARTICLE',
+  'INTERVIEW',
+  'LETTER',
+  'ESSAY',
+  'CUSTOM_TEXT',
+]);
+export type SourceType = z.infer<typeof SourceTypeEnum>;
+
 export const CreatePersonalitySchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   bio: z.string().min(10, 'Bio must be at least 10 characters'),
@@ -24,6 +35,7 @@ export const PersonalityResponseSchema = z.object({
   status: PersonalityStatusEnum,
   creatorId: z.string(),
   creatorName: z.string(),
+  sourcesCount: z.number().default(0),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

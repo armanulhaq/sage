@@ -40,7 +40,7 @@ function LoginForm() {
 
       if (res.status === 200) {
         setAuthToken(res.body.accessToken);
-        router.push('/dashboard');
+        router.push('/mentors');
       } else {
         const body = res.body as any;
         const errorMsg =
