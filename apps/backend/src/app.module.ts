@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { PersonalityModule } from './personality/personality.module';
 import mikroOrmConfig from '../mikro-orm.config';
 
 @Module({
@@ -23,6 +24,7 @@ import mikroOrmConfig from '../mikro-orm.config';
     }),
     UserModule,
     AuthModule,
+    PersonalityModule,
   ],
   controllers: [AppController],
   providers: [AppService],
