@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
-  Sparkles,
   Plus,
   Search,
   Compass,
@@ -15,15 +14,17 @@ import {
 } from 'lucide-react';
 import { api } from '@/utils/api';
 import type { PersonalityResponse, UserProfile } from 'contract';
+import CreatePersonalityModal from '@/components/CreatePersonalityModal';
 
-export default function MentorsPage() {
+export default function SagesPage() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [personalities, setPersonalities] = useState<PersonalityResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'all' | 'mine'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Fetch or refresh the list of mentors
+  // Fetch or refresh the list of sages
   const fetchPersonalities = useCallback(async () => {
     try {
       const res = await api.personality.list();
@@ -31,7 +32,7 @@ export default function MentorsPage() {
         setPersonalities(res.body);
       }
     } catch (err) {
-      console.error('Failed to load mentors:', err);
+      console.error('Failed to load sages:', err);
     }
   }, []);
 
@@ -50,27 +51,22 @@ export default function MentorsPage() {
           setPersonalities(personalitiesRes.body);
         }
       } catch (err) {
-        console.error('Failed to load mentors page data:', err);
+        console.error('Failed to load sages page data:', err);
       } finally {
         setLoading(false);
       }
     };
 
     init();
+  }, []);
 
-    // Re-fetch when a new mentor is created in the sidebar modal
-    const handleMentorCreated = () => fetchPersonalities();
-    window.addEventListener('mentor-created', handleMentorCreated);
-    return () => window.removeEventListener('mentor-created', handleMentorCreated);
-  }, [fetchPersonalities]);
-
-  const myMentorsCount = useMemo(
+  const mySagesCount = useMemo(
     () => (user ? personalities.filter((p) => p.creatorId === user.id).length : 0),
     [personalities, user]
   );
 
-  // Search filtered strictly by mentor name
-  const displayedMentors = useMemo(() => {
+  // Search filtered strictly by sage name
+  const displayedSages = useMemo(() => {
     return personalities
       .filter((p) => {
         if (activeTab === 'mine') return user && p.creatorId === user.id;
@@ -88,54 +84,60 @@ export default function MentorsPage() {
       {/* Header & Search */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-yellow-500/20 bg-yellow-500/10 text-yellow-400 text-xs font-medium mb-2">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Source-Grounded Mentors</span>
-          </div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
             Dialogue with Sages
           </h1>
-          <p className="text-xs sm:text-sm text-neutral-400 mt-1">
-            Explore historical thinkers, philosophers, and mentors grounded in authentic texts.
+          <p className="text-xs sm:text-sm text-stone-400 mt-1">
+            Historical thinkers, philosophers, and leaders grounded in authentic texts.
           </p>
         </div>
 
-        {/* Search Input - Strictly filters by mentor name */}
-        <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
-            type="text"
-            placeholder="Search mentors by name..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-8 py-2 rounded-xl bg-neutral-900/70 border border-neutral-800 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-yellow-400 transition-colors"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
+        {/* Search Input & Create Sage Action */}
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="relative flex-1 sm:w-64">
+            <Search className="w-4 h-4 text-stone-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search sages by name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-8 py-2 rounded-xl bg-stone-900/80 border border-stone-800 text-xs text-stone-200 placeholder-stone-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/20 transition-colors shadow-sm"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-500 hover:text-white"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="px-4 py-2 rounded-xl bg-red-700 hover:bg-red-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-red-950/40 transition-all hover:scale-[1.01] flex-shrink-0"
+          >
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            <span>Create Sage</span>
+          </button>
         </div>
       </div>
 
-      {/* Navigation Tabs: All Mentors vs My Mentors */}
-      <div className="flex items-center gap-2 border-b border-neutral-800/80 pb-3">
+      {/* Navigation Tabs: All Sages vs My Sages */}
+      <div className="flex items-center gap-2 border-b border-stone-800/80 pb-3">
         <button
           onClick={() => setActiveTab('all')}
-          className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-2 ${
             activeTab === 'all'
-              ? 'bg-yellow-400 text-black font-semibold'
-              : 'text-neutral-400 hover:text-white hover:bg-neutral-900'
+              ? 'bg-red-700 text-white font-bold shadow-md shadow-red-950/40'
+              : 'text-stone-400 hover:text-white hover:bg-stone-900/60'
           }`}
         >
           <Compass className="w-3.5 h-3.5" />
-          <span>All Mentors</span>
+          <span>All Sages</span>
           <span
             className={`text-[10px] px-1.5 py-0.5 rounded ${
-              activeTab === 'all' ? 'bg-black/15 text-black' : 'bg-neutral-800 text-neutral-400'
+              activeTab === 'all' ? 'bg-black/20 text-white font-bold' : 'bg-stone-900 border border-stone-800 text-stone-400'
             }`}
           >
             {loading ? '...' : personalities.length}
@@ -144,20 +146,20 @@ export default function MentorsPage() {
 
         <button
           onClick={() => setActiveTab('mine')}
-          className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-2 ${
             activeTab === 'mine'
-              ? 'bg-yellow-400 text-black font-semibold'
-              : 'text-neutral-400 hover:text-white hover:bg-neutral-900'
+              ? 'bg-red-700 text-white font-bold shadow-md shadow-red-950/40'
+              : 'text-stone-400 hover:text-white hover:bg-stone-900/60'
           }`}
         >
           <UserIcon className="w-3.5 h-3.5" />
-          <span>My Mentors</span>
+          <span>My Sages</span>
           <span
             className={`text-[10px] px-1.5 py-0.5 rounded ${
-              activeTab === 'mine' ? 'bg-black/15 text-black' : 'bg-neutral-800 text-neutral-400'
+              activeTab === 'mine' ? 'bg-black/20 text-white font-bold' : 'bg-stone-900 border border-stone-800 text-stone-400'
             }`}
           >
-            {loading ? '...' : myMentorsCount}
+            {loading ? '...' : mySagesCount}
           </span>
         </button>
       </div>
@@ -169,68 +171,68 @@ export default function MentorsPage() {
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div
               key={i}
-              className="p-5 rounded-2xl border border-neutral-800/80 bg-neutral-900/30 animate-pulse flex flex-col justify-between h-56"
+              className="p-5 rounded-2xl border border-stone-800/80 bg-[#111218]/40 animate-pulse flex flex-col justify-between h-56"
             >
               <div>
                 <div className="flex items-start gap-3.5 mb-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-neutral-800/70 flex-shrink-0" />
+                  <div className="w-12 h-12 rounded-xl bg-stone-800/80 flex-shrink-0" />
                   <div className="flex-1 space-y-2 pt-1">
-                    <div className="h-4 bg-neutral-800/80 rounded w-28" />
-                    <div className="h-2.5 bg-neutral-800/50 rounded w-16" />
+                    <div className="h-4 bg-stone-800/80 rounded w-28" />
+                    <div className="h-2.5 bg-stone-800/50 rounded w-16" />
                   </div>
                 </div>
                 <div className="space-y-2 mt-4">
-                  <div className="h-2.5 bg-neutral-800/60 rounded w-full" />
-                  <div className="h-2.5 bg-neutral-800/60 rounded w-4/5" />
-                  <div className="h-2.5 bg-neutral-800/40 rounded w-2/3" />
+                  <div className="h-2.5 bg-stone-800/60 rounded w-full" />
+                  <div className="h-2.5 bg-stone-800/60 rounded w-4/5" />
+                  <div className="h-2.5 bg-stone-800/40 rounded w-2/3" />
                 </div>
               </div>
-              <div className="pt-3 border-t border-neutral-800/60 flex items-center justify-between">
-                <div className="h-3 bg-neutral-800/40 rounded w-16" />
-                <div className="h-7 bg-neutral-800/70 rounded-lg w-16" />
+              <div className="pt-3 border-t border-stone-800/60 flex items-center justify-between">
+                <div className="h-3 bg-stone-800/40 rounded w-16" />
+                <div className="h-7 bg-stone-800/70 rounded-lg w-16" />
               </div>
             </div>
           ))}
         </div>
-      ) : displayedMentors.length === 0 ? (
+      ) : displayedSages.length === 0 ? (
         // Empty State
-        <div className="text-center py-20 px-4 rounded-2xl border border-neutral-800/80 bg-neutral-900/20 backdrop-blur-sm">
-          <div className="w-12 h-12 rounded-2xl bg-neutral-900 border border-neutral-800 flex items-center justify-center mx-auto mb-3 text-neutral-500">
+        <div className="text-center py-20 px-4 rounded-2xl border border-stone-800/80 bg-[#111218]/40 backdrop-blur-sm">
+          <div className="w-12 h-12 rounded-2xl bg-stone-900 border border-red-500/20 flex items-center justify-center mx-auto mb-3 text-red-400">
             <Compass className="w-6 h-6" />
           </div>
           <h3 className="text-base font-semibold text-white mb-1">
-            {searchQuery ? 'No matching mentors found' : 'No mentors yet'}
+            {searchQuery ? 'No matching sages found' : 'No sages yet'}
           </h3>
-          <p className="text-xs text-neutral-400 max-w-sm mx-auto mb-5 leading-relaxed">
+          <p className="text-xs text-stone-400 max-w-sm mx-auto mb-5 leading-relaxed">
             {searchQuery
-              ? `No mentors match "${searchQuery}". Try a different name.`
+              ? `No sages match "${searchQuery}". Try a different name.`
               : activeTab === 'mine'
-              ? 'You have not created any mentors yet. Bring a thinker or guide to life!'
-              : 'No mentors are currently available in the directory.'}
+              ? 'You have not created any sages yet. Bring a historical thinker to life!'
+              : 'No public sages are currently published in the catalog.'}
           </p>
           <button
-            onClick={() => window.dispatchEvent(new Event('open-create-mentor'))}
-            className="px-4 py-2.5 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-semibold inline-flex items-center gap-1.5 transition-colors shadow-lg shadow-yellow-400/10"
+            onClick={() => setIsModalOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-red-700 hover:bg-red-600 text-white text-xs font-bold inline-flex items-center gap-1.5 transition-colors shadow-lg shadow-red-950/40 hover:scale-[1.02]"
           >
             <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span>Create Mentor</span>
+            <span>Create Sage</span>
           </button>
         </div>
       ) : (
-        // Mentor Cards Grid
+        // Sages Cards Grid
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {displayedMentors.map((p) => {
+          {displayedSages.map((p) => {
             const isOwner = user ? p.creatorId === user.id : false;
 
             return (
               <div
                 key={p.id}
-                className="group p-5 rounded-2xl border border-neutral-800/90 bg-neutral-900/40 hover:bg-neutral-900/80 hover:border-neutral-700/80 transition-all flex flex-col justify-between shadow-sm"
+                className="group p-5 rounded-2xl border border-stone-800/80 bg-[#111218]/70 hover:bg-[#151620]/90 hover:border-red-500/40 transition-all flex flex-col justify-between shadow-sm hover:shadow-lg hover:shadow-red-950/10"
               >
                 <div>
                   {/* Card Header */}
                   <div className="flex items-start gap-3.5 mb-3.5">
-                    <div className="w-12 h-12 rounded-xl border border-neutral-800 bg-neutral-950 flex-shrink-0 overflow-hidden flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-xl border border-stone-800 bg-stone-950 flex-shrink-0 overflow-hidden flex items-center justify-center">
                       {p.avatar ? (
                         <img
                           src={p.avatar}
@@ -241,13 +243,13 @@ export default function MentorsPage() {
                           }}
                         />
                       ) : (
-                        <UserIcon className="w-6 h-6 text-neutral-600" />
+                        <UserIcon className="w-6 h-6 text-stone-600" />
                       )}
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 mb-0.5">
-                        <h3 className="text-sm font-bold text-white truncate group-hover:text-yellow-400 transition-colors">
+                        <h3 className="text-sm font-bold text-white truncate group-hover:text-red-400 transition-colors">
                           {p.name}
                         </h3>
 
@@ -258,16 +260,16 @@ export default function MentorsPage() {
                             <span>Public</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-400 border border-neutral-700 flex-shrink-0">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-stone-900 text-stone-400 border border-stone-800 flex-shrink-0">
                             <Lock className="w-2.5 h-2.5" />
                             <span>Private</span>
                           </span>
                         )}
                       </div>
 
-                      <p className="text-[11px] text-neutral-400 truncate">
+                      <p className="text-[11px] text-stone-400 truncate">
                         Created by{' '}
-                        <span className="text-neutral-300 font-medium">
+                        <span className="text-stone-300 font-medium">
                           {isOwner ? 'You' : p.creatorName}
                         </span>
                       </p>
@@ -275,14 +277,14 @@ export default function MentorsPage() {
                   </div>
 
                   {/* Bio */}
-                  <p className="text-xs text-neutral-300 line-clamp-3 mb-3.5 leading-relaxed">
+                  <p className="text-xs text-stone-300 line-clamp-3 mb-3.5 leading-relaxed font-serif-quote">
                     {p.bio}
                   </p>
 
                   {/* Voice Tone */}
                   {p.voiceTone && (
                     <div className="mb-4">
-                      <span className="inline-block text-[10px] px-2.5 py-1 rounded-md bg-neutral-950 border border-neutral-800 text-neutral-400 italic">
+                      <span className="inline-block text-[10px] px-2.5 py-1 rounded-md bg-stone-950/80 border border-stone-800 text-red-300/80 italic font-serif-quote">
                         &ldquo;{p.voiceTone}&rdquo;
                       </span>
                     </div>
@@ -290,9 +292,9 @@ export default function MentorsPage() {
                 </div>
 
                 {/* Footer Metadata & Actions */}
-                <div className="pt-3 border-t border-neutral-800/80 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-[11px] text-neutral-400">
-                    <BookOpen className="w-3.5 h-3.5 text-neutral-500" />
+                <div className="pt-3 border-t border-stone-800/80 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-[11px] text-stone-400">
+                    <BookOpen className="w-3.5 h-3.5 text-red-400/80" />
                     <span>
                       {p.sourcesCount > 0
                         ? `${p.sourcesCount} ${p.sourcesCount === 1 ? 'source' : 'sources'}`
@@ -304,7 +306,7 @@ export default function MentorsPage() {
                     onClick={() => {
                       alert(`Dialogue with ${p.name} (Chat interface coming up next)`);
                     }}
-                    className="px-3.5 py-1.5 rounded-lg bg-neutral-800 hover:bg-yellow-400 hover:text-black text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                    className="px-3.5 py-1.5 rounded-xl bg-stone-800 hover:bg-red-700 hover:text-white text-stone-200 text-xs font-semibold flex items-center gap-1.5 transition-colors"
                   >
                     <MessageSquare className="w-3.5 h-3.5" />
                     <span>Chat</span>
@@ -315,6 +317,15 @@ export default function MentorsPage() {
           })}
         </div>
       )}
+
+      {/* Create Sage Modal */}
+      <CreatePersonalityModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onCreated={() => {
+          fetchPersonalities();
+        }}
+      />
     </div>
   );
 }

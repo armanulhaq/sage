@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
+import { ArrowRight } from 'lucide-react';
 import { api, getApiUrl } from '@/utils/api';
-import { setAuthToken } from '@/utils/auth';
+import { setAuthToken, getAuthToken } from '@/utils/auth';
 
 type RegisterFormValues = {
   name: string;
@@ -18,6 +19,12 @@ type RegisterFormValues = {
 export default function RegisterPage() {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (getAuthToken()) {
+      router.replace('/sages');
+    }
+  }, [router]);
 
   const {
     register,
@@ -41,7 +48,7 @@ export default function RegisterPage() {
 
       if (res.status === 201) {
         setAuthToken(res.body.accessToken);
-        router.push('/mentors');
+        router.replace('/sages');
       } else {
         const body = res.body as any;
         const errorMsg =
@@ -59,20 +66,27 @@ export default function RegisterPage() {
   const googleAuthUrl = `${getApiUrl()}/auth/google`;
 
   return (
-    <div className="min-h-screen text-white bg-neutral-950 bg-[radial-gradient(ellipse_100%_70%_at_50%_0%,rgba(250,204,21,0.2),rgba(15,15,18,0.95)_55%,#09090b)] flex flex-col justify-center items-center px-4 py-12">
-      <Link href="/" className="flex items-center gap-2.5 mb-8">
-        <Image src="/logo.png" alt="Sage" width={28} height={28} />
-        <span className="text-2xl font-bold tracking-tight">Sage</span>
+    <div className="min-h-screen text-stone-100 bg-[#090a0f] relative overflow-hidden flex flex-col justify-center items-center px-4 py-12">
+      {/* Single Cohesive Ambient Halo centered behind the card */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[680px] h-[680px] bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.36)_0%,rgba(185,28,28,0.14)_45%,transparent_70%)] pointer-events-none blur-3xl" />
+
+      <Link href="/" className="flex items-center gap-2.5 mb-6 group relative z-10">
+        <div className="w-8 h-8 flex items-center justify-center group-hover:scale-105 transition-transform">
+          <Image src="/logo.svg" alt="Sage" width={32} height={32} className="w-full h-full object-contain" />
+        </div>
+        <span className="text-2xl font-bold tracking-tight text-white group-hover:text-red-400 transition-colors">
+          Sage
+        </span>
       </Link>
 
-      <div className="w-full max-w-sm border border-neutral-800 bg-neutral-900/60 p-8 rounded-2xl shadow-xl backdrop-blur-sm">
+      <div className="w-full max-w-sm border border-red-500/30 bg-[#111218]/95 p-8 rounded-2xl shadow-2xl shadow-red-950/70 backdrop-blur-xl relative z-10">
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-bold mb-1">Create an account</h1>
-          <p className="text-sm text-neutral-400">Begin your journey with history’s mentors</p>
+          <h1 className="text-2xl font-bold tracking-tight text-white mb-1">Create an account</h1>
+          <p className="text-xs text-stone-400">Begin your journey with history’s sages</p>
         </div>
 
         {serverError && (
-          <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
+          <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
             {serverError}
           </div>
         )}
@@ -80,7 +94,7 @@ export default function RegisterPage() {
         {/* Google OAuth Button */}
         <a
           href={googleAuthUrl}
-          className="w-full py-2.5 px-4 rounded-lg border border-neutral-800 bg-neutral-950 hover:bg-neutral-900 text-white font-medium text-sm flex items-center justify-center gap-2.5 transition-colors mb-4"
+          className="w-full py-2.5 px-4 rounded-xl border border-stone-800 bg-stone-900/80 hover:bg-stone-800 text-stone-200 font-medium text-xs flex items-center justify-center gap-2.5 transition-colors mb-4 shadow-sm"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">
             <path
@@ -104,36 +118,39 @@ export default function RegisterPage() {
         </a>
 
         <div className="relative flex items-center justify-center my-4">
-          <div className="border-t border-neutral-800 w-full" />
-          <span className="bg-neutral-900/60 px-2 text-[11px] text-neutral-500 uppercase tracking-wider absolute">
-            or
+          <div className="border-t border-stone-800 w-full" />
+          <span className="bg-[#111218] px-2 text-[10px] text-stone-500 uppercase tracking-widest absolute">
+            or email
           </span>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-neutral-300 mb-1.5">
+            <label className="block text-xs font-medium text-stone-300 mb-1.5">
               Full name
             </label>
             <input
               type="text"
-              placeholder="Alex Morgan"
+              placeholder="Your name"
               autoComplete="name"
-              {...register('name', { required: 'Name is required' })}
-              className="w-full px-3.5 py-2.5 rounded-lg bg-neutral-950 border border-neutral-800 text-white placeholder-neutral-500 text-sm focus:outline-none focus:border-yellow-400"
+              {...register('name', {
+                required: 'Name is required',
+                minLength: { value: 2, message: 'Name must be at least 2 characters' },
+              })}
+              className="w-full px-3.5 py-2.5 rounded-xl bg-stone-950/80 border border-stone-800 text-stone-200 placeholder-stone-600 text-xs focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/20 transition-colors"
             />
             {errors.name && (
-              <p className="text-xs text-red-400 mt-1">{errors.name.message}</p>
+              <p className="text-[11px] text-red-400 mt-1">{errors.name.message}</p>
             )}
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-neutral-300 mb-1.5">
+            <label className="block text-xs font-medium text-stone-300 mb-1.5">
               Email address
             </label>
             <input
               type="email"
-              placeholder="you@example.com"
+              placeholder="you@domain.com"
               autoComplete="email"
               {...register('email', {
                 required: 'Email is required',
@@ -142,15 +159,15 @@ export default function RegisterPage() {
                   message: 'Enter a valid email address',
                 },
               })}
-              className="w-full px-3.5 py-2.5 rounded-lg bg-neutral-950 border border-neutral-800 text-white placeholder-neutral-500 text-sm focus:outline-none focus:border-yellow-400"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-stone-950/80 border border-stone-800 text-stone-200 placeholder-stone-600 text-xs focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/20 transition-colors"
             />
             {errors.email && (
-              <p className="text-xs text-red-400 mt-1">{errors.email.message}</p>
+              <p className="text-[11px] text-red-400 mt-1">{errors.email.message}</p>
             )}
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-neutral-300 mb-1.5">
+            <label className="block text-xs font-medium text-stone-300 mb-1.5">
               Password
             </label>
             <input
@@ -159,20 +176,17 @@ export default function RegisterPage() {
               autoComplete="new-password"
               {...register('password', {
                 required: 'Password is required',
-                minLength: {
-                  value: 6,
-                  message: 'Password must be at least 6 characters',
-                },
+                minLength: { value: 6, message: 'Password must be at least 6 characters' },
               })}
-              className="w-full px-3.5 py-2.5 rounded-lg bg-neutral-950 border border-neutral-800 text-white placeholder-neutral-500 text-sm focus:outline-none focus:border-yellow-400"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-stone-950/80 border border-stone-800 text-stone-200 placeholder-stone-600 text-xs focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/20 transition-colors"
             />
             {errors.password && (
-              <p className="text-xs text-red-400 mt-1">{errors.password.message}</p>
+              <p className="text-[11px] text-red-400 mt-1">{errors.password.message}</p>
             )}
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-neutral-300 mb-1.5">
+            <label className="block text-xs font-medium text-stone-300 mb-1.5">
               Confirm password
             </label>
             <input
@@ -181,28 +195,30 @@ export default function RegisterPage() {
               autoComplete="new-password"
               {...register('confirmPassword', {
                 required: 'Please confirm your password',
-                validate: (value) =>
-                  value === password || 'Passwords do not match',
+                validate: (val) => val === password || 'Passwords do not match',
               })}
-              className="w-full px-3.5 py-2.5 rounded-lg bg-neutral-950 border border-neutral-800 text-white placeholder-neutral-500 text-sm focus:outline-none focus:border-yellow-400"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-stone-950/80 border border-stone-800 text-stone-200 placeholder-stone-600 text-xs focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/20 transition-colors"
             />
             {errors.confirmPassword && (
-              <p className="text-xs text-red-400 mt-1">{errors.confirmPassword.message}</p>
+              <p className="text-[11px] text-red-400 mt-1">
+                {errors.confirmPassword.message}
+              </p>
             )}
           </div>
 
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-2.5 rounded-lg bg-yellow-400 text-black font-semibold text-sm hover:bg-yellow-300 transition-colors disabled:opacity-50 mt-2"
+            className="w-full py-2.5 rounded-xl bg-red-700 hover:bg-red-600 text-white font-bold text-xs shadow-lg shadow-red-950/40 transition-all hover:scale-[1.01] disabled:opacity-50 mt-2 flex items-center justify-center gap-1.5"
           >
-            {isSubmitting ? 'Creating account...' : 'Create Account'}
+            <span>{isSubmitting ? 'Creating account...' : 'Create Account'}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </form>
 
-        <p className="text-xs text-neutral-400 text-center mt-6">
+        <p className="text-xs text-stone-400 text-center mt-6">
           Already have an account?{' '}
-          <Link href="/login" className="text-yellow-400 hover:underline font-medium">
+          <Link href="/login" className="text-red-400 hover:text-red-300 font-semibold underline underline-offset-2">
             Sign in
           </Link>
         </p>
