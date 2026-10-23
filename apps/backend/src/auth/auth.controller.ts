@@ -62,13 +62,21 @@ export class AuthController {
   // After the user signs in on Google and approves, Google redirects back here with a "?code=..." query param.
   // GoogleAuthGuard intercepts this request, exchanges the code with Google for the user's profile,
   // runs GoogleStrategy.validate(), and attaches the returned User entity to `req.user`.
-  // We then sign our JWT accessToken and redirect the user back to the Next.js frontend!
+  // We sign our JWT token, set the cookie directly on the browser, and redirect directly to /dashboard!
   @Get('auth/google/callback')
   @UseGuards(GoogleAuthGuard)
   async googleAuthRedirect(@CurrentUser() user: User, @Res() res: Response) {
     const accessToken = await this.authService.generateToken(user);
     const frontendUrl =
       this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
-    return res.redirect(`${frontendUrl}/auth/callback?token=${accessToken}`);
+
+    // Set cookie directly on the browser
+    res.cookie('sage_token', accessToken, {
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      sameSite: 'lax',
+    });
+
+    return res.redirect(`${frontendUrl}/dashboard`);
   }
 }

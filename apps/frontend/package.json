@@ -9,6 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ts-rest/core": "^3.52.1",
+    "contract": "workspace:*",
+    "js-cookie": "^3.0.8",
     "lucide-react": "^0.475.0",
     "next": "15.1.7",
     "react": "^19.0.0",
@@ -16,6 +19,7 @@
     "react-hook-form": "^7.90.0"
   },
   "devDependencies": {
+    "@types/js-cookie": "^3.0.6",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
