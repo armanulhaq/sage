@@ -12,9 +12,9 @@ import {
   MessageSquare,
   X,
 } from 'lucide-react';
+import Link from 'next/link';
 import { api } from '@/utils/api';
 import type { PersonalityResponse, UserProfile } from 'contract';
-import CreatePersonalityModal from '@/components/CreatePersonalityModal';
 
 export default function SagesPage() {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -113,13 +113,13 @@ export default function SagesPage() {
             )}
           </div>
 
-          <button
-            onClick={() => setIsModalOpen(true)}
+          <Link
+            href="/sages/create"
             className="px-4 py-2 rounded-xl bg-red-700 hover:bg-red-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-red-950/40 transition-all hover:scale-[1.01] flex-shrink-0"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>Create Sage</span>
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -210,13 +210,13 @@ export default function SagesPage() {
               ? 'You have not created any sages yet. Bring a historical thinker to life!'
               : 'No public sages are currently published in the catalog.'}
           </p>
-          <button
-            onClick={() => setIsModalOpen(true)}
+          <Link
+            href="/sages/create"
             className="px-4 py-2.5 rounded-xl bg-red-700 hover:bg-red-600 text-white text-xs font-bold inline-flex items-center gap-1.5 transition-colors shadow-lg shadow-red-950/40 hover:scale-[1.02]"
           >
             <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
             <span>Create Sage</span>
-          </button>
+          </Link>
         </div>
       ) : (
         // Sages Cards Grid
@@ -232,7 +232,7 @@ export default function SagesPage() {
                 <div>
                   {/* Card Header */}
                   <div className="flex items-start gap-3.5 mb-3.5">
-                    <div className="w-12 h-12 rounded-xl border border-stone-800 bg-stone-950 flex-shrink-0 overflow-hidden flex items-center justify-center">
+                    <div className="relative w-12 h-12 rounded-xl border border-stone-800 bg-stone-900 flex-shrink-0 overflow-hidden flex items-center justify-center">
                       {p.avatar ? (
                         <img
                           src={p.avatar}
@@ -240,11 +240,18 @@ export default function SagesPage() {
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             (e.target as HTMLElement).style.display = 'none';
+                            const fallback = (e.target as HTMLElement).parentElement?.querySelector('.avatar-fallback');
+                            if (fallback) (fallback as HTMLElement).classList.remove('hidden');
                           }}
                         />
-                      ) : (
-                        <UserIcon className="w-6 h-6 text-stone-600" />
-                      )}
+                      ) : null}
+                      <div
+                        className={`avatar-fallback w-full h-full flex items-center justify-center bg-red-950/40 text-red-300 font-bold text-sm ${
+                          p.avatar ? 'hidden' : ''
+                        }`}
+                      >
+                        {p.name ? p.name.charAt(0).toUpperCase() : <UserIcon className="w-5 h-5 text-stone-500" />}
+                      </div>
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -318,14 +325,6 @@ export default function SagesPage() {
         </div>
       )}
 
-      {/* Create Sage Modal */}
-      <CreatePersonalityModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onCreated={() => {
-          fetchPersonalities();
-        }}
-      />
     </div>
   );
 }
