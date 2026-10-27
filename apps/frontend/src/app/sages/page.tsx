@@ -11,6 +11,10 @@ import {
   BookOpen,
   MessageSquare,
   X,
+  Info,
+  Trash2,
+  Loader2,
+  AlertTriangle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { api } from '@/utils/api';
@@ -22,7 +26,12 @@ export default function SagesPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'all' | 'mine'>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Modals state
+  const [detailsSage, setDetailsSage] = useState<PersonalityResponse | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<PersonalityResponse | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Fetch or refresh the list of sages
   const fetchPersonalities = useCallback(async () => {
@@ -78,6 +87,32 @@ export default function SagesPage() {
         return p.name.toLowerCase().includes(q);
       });
   }, [personalities, activeTab, user, searchQuery]);
+
+  // Handle Delete Confirmation
+  const handleDeleteSage = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const res = await api.personality.delete({
+        params: { id: deleteTarget.id },
+      });
+
+      if (res.status === 200) {
+        setPersonalities((prev) => prev.filter((p) => p.id !== deleteTarget.id));
+        setDeleteTarget(null);
+      } else {
+        const body = res.body as any;
+        setDeleteError(body?.message || 'Failed to delete sage');
+      }
+    } catch (err: any) {
+      console.error('Delete sage error:', err);
+      setDeleteError('An unexpected error occurred while deleting');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -137,7 +172,9 @@ export default function SagesPage() {
           <span>All Sages</span>
           <span
             className={`text-[10px] px-1.5 py-0.5 rounded ${
-              activeTab === 'all' ? 'bg-black/20 text-white font-bold' : 'bg-stone-900 border border-stone-800 text-stone-400'
+              activeTab === 'all'
+                ? 'bg-black/20 text-white font-bold'
+                : 'bg-stone-900 border border-stone-800 text-stone-400'
             }`}
           >
             {loading ? '...' : personalities.length}
@@ -156,7 +193,9 @@ export default function SagesPage() {
           <span>My Sages</span>
           <span
             className={`text-[10px] px-1.5 py-0.5 rounded ${
-              activeTab === 'mine' ? 'bg-black/20 text-white font-bold' : 'bg-stone-900 border border-stone-800 text-stone-400'
+              activeTab === 'mine'
+                ? 'bg-black/20 text-white font-bold'
+                : 'bg-stone-900 border border-stone-800 text-stone-400'
             }`}
           >
             {loading ? '...' : mySagesCount}
@@ -167,31 +206,12 @@ export default function SagesPage() {
       {/* Content Area */}
       {loading ? (
         // Shimmer Skeleton Grid
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <div
               key={i}
-              className="p-5 rounded-2xl border border-stone-800/80 bg-[#111218]/40 animate-pulse flex flex-col justify-between h-56"
-            >
-              <div>
-                <div className="flex items-start gap-3.5 mb-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-stone-800/80 flex-shrink-0" />
-                  <div className="flex-1 space-y-2 pt-1">
-                    <div className="h-4 bg-stone-800/80 rounded w-28" />
-                    <div className="h-2.5 bg-stone-800/50 rounded w-16" />
-                  </div>
-                </div>
-                <div className="space-y-2 mt-4">
-                  <div className="h-2.5 bg-stone-800/60 rounded w-full" />
-                  <div className="h-2.5 bg-stone-800/60 rounded w-4/5" />
-                  <div className="h-2.5 bg-stone-800/40 rounded w-2/3" />
-                </div>
-              </div>
-              <div className="pt-3 border-t border-stone-800/60 flex items-center justify-between">
-                <div className="h-3 bg-stone-800/40 rounded w-16" />
-                <div className="h-7 bg-stone-800/70 rounded-lg w-16" />
-              </div>
-            </div>
+              className="rounded-2xl border border-stone-800/80 bg-[#111218]/40 animate-pulse h-80"
+            />
           ))}
         </div>
       ) : displayedSages.length === 0 ? (
@@ -219,104 +239,108 @@ export default function SagesPage() {
           </Link>
         </div>
       ) : (
-        // Sages Cards Grid
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        // Sages Cards Grid - Framed portrait + clean pedestal layout
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {displayedSages.map((p) => {
             const isOwner = user ? p.creatorId === user.id : false;
 
             return (
               <div
                 key={p.id}
-                className="group p-5 rounded-2xl border border-stone-800/80 bg-[#111218]/70 hover:bg-[#151620]/90 hover:border-red-500/40 transition-all flex flex-col justify-between shadow-sm hover:shadow-lg hover:shadow-red-950/10"
+                className="group relative rounded-2xl overflow-hidden border border-stone-800/80 bg-[#111218] hover:border-red-500/50 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-red-950/30 flex flex-col justify-between"
               >
-                <div>
-                  {/* Card Header */}
-                  <div className="flex items-start gap-3.5 mb-3.5">
-                    <div className="relative w-12 h-12 rounded-xl border border-stone-800 bg-stone-900 flex-shrink-0 overflow-hidden flex items-center justify-center">
-                      {p.avatar ? (
-                        <img
-                          src={p.avatar}
-                          alt={p.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = 'none';
-                            const fallback = (e.target as HTMLElement).parentElement?.querySelector('.avatar-fallback');
-                            if (fallback) (fallback as HTMLElement).classList.remove('hidden');
-                          }}
-                        />
-                      ) : null}
-                      <div
-                        className={`avatar-fallback w-full h-full flex items-center justify-center bg-red-950/40 text-red-300 font-bold text-sm ${
-                          p.avatar ? 'hidden' : ''
-                        }`}
-                      >
-                        {p.name ? p.name.charAt(0).toUpperCase() : <UserIcon className="w-5 h-5 text-stone-500" />}
-                      </div>
+                {/* 1. Unobstructed Framed Portrait (Top) */}
+                <div className="relative w-full aspect-[4/3.8] overflow-hidden bg-stone-950">
+                  {p.avatar ? (
+                    <img
+                      src={p.avatar}
+                      alt={p.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none';
+                        const fallback = (e.target as HTMLElement).parentElement?.querySelector(
+                          '.avatar-fallback',
+                        );
+                        if (fallback) (fallback as HTMLElement).classList.remove('hidden');
+                      }}
+                    />
+                  ) : null}
+
+                  {/* Fallback portrait background */}
+                  <div
+                    className={`avatar-fallback absolute inset-0 w-full h-full bg-gradient-to-b from-stone-900 via-stone-950 to-[#090a0f] flex flex-col items-center justify-center p-6 text-center ${
+                      p.avatar ? 'hidden' : ''
+                    }`}
+                  >
+                    <div className="w-14 h-14 rounded-2xl bg-red-950/40 border border-red-500/20 flex items-center justify-center text-red-400 mb-2 shadow-inner">
+                      <UserIcon className="w-7 h-7 opacity-80" />
                     </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-0.5">
-                        <h3 className="text-sm font-bold text-white truncate group-hover:text-red-400 transition-colors">
-                          {p.name}
-                        </h3>
-
-                        {/* Status Pill */}
-                        {p.status === 'APPROVED' ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex-shrink-0">
-                            <Globe className="w-2.5 h-2.5" />
-                            <span>Public</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-stone-900 text-stone-400 border border-stone-800 flex-shrink-0">
-                            <Lock className="w-2.5 h-2.5" />
-                            <span>Private</span>
-                          </span>
-                        )}
-                      </div>
-
-                      <p className="text-[11px] text-stone-400 truncate">
-                        Created by{' '}
-                        <span className="text-stone-300 font-medium">
-                          {isOwner ? 'You' : p.creatorName}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Bio */}
-                  <p className="text-xs text-stone-300 line-clamp-3 mb-3.5 leading-relaxed font-serif-quote">
-                    {p.bio}
-                  </p>
-
-                  {/* Voice Tone */}
-                  {p.voiceTone && (
-                    <div className="mb-4">
-                      <span className="inline-block text-[10px] px-2.5 py-1 rounded-md bg-stone-950/80 border border-stone-800 text-red-300/80 italic font-serif-quote">
-                        &ldquo;{p.voiceTone}&rdquo;
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Footer Metadata & Actions */}
-                <div className="pt-3 border-t border-stone-800/80 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-[11px] text-stone-400">
-                    <BookOpen className="w-3.5 h-3.5 text-red-400/80" />
-                    <span>
-                      {p.sourcesCount > 0
-                        ? `${p.sourcesCount} ${p.sourcesCount === 1 ? 'source' : 'sources'}`
-                        : '0 sources'}
+                    <span className="text-2xl font-serif italic text-red-500/20 select-none">
+                      {p.name.charAt(0).toUpperCase()}
                     </span>
                   </div>
 
+                  {/* Top Bar Floating Over Portrait */}
+                  <div className="absolute top-0 inset-x-0 p-3 flex items-center justify-between gap-2 z-10 bg-gradient-to-b from-black/70 via-black/30 to-transparent">
+                    {/* Status Pill */}
+                    {p.status === 'APPROVED' ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-emerald-400 border border-emerald-500/30 shadow-sm">
+                        <Globe className="w-2.5 h-2.5" />
+                        <span>Public</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-stone-300 border border-white/10 shadow-sm">
+                        <Lock className="w-2.5 h-2.5 text-stone-400" />
+                        <span>Private</span>
+                      </span>
+                    )}
+
+                    {/* Action Buttons: Info & Delete */}
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setDetailsSage(p)}
+                        title="View Sage details"
+                        className="w-7 h-7 rounded-full bg-black/60 hover:bg-black/90 text-stone-300 hover:text-white border border-white/10 backdrop-blur-md flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-md"
+                      >
+                        <Info className="w-3.5 h-3.5" />
+                      </button>
+
+                      {isOwner && (
+                        <button
+                          type="button"
+                          onClick={() => setDeleteTarget(p)}
+                          title="Delete Sage"
+                          className="w-7 h-7 rounded-full bg-black/60 hover:bg-red-950/90 text-stone-300 hover:text-red-400 border border-white/10 backdrop-blur-md flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-md"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Grounded Card Base / Pedestal (No overlap with the photo) */}
+                <div className="p-4 bg-[#111218] border-t border-stone-800/80 flex flex-col justify-between flex-1 space-y-3">
+                  <div>
+                    <h3 className="text-base font-bold text-white tracking-tight leading-snug group-hover:text-red-400 transition-colors line-clamp-1">
+                      {p.name}
+                    </h3>
+                    <p className="text-[11px] text-stone-400 mt-0.5 line-clamp-1">
+                      {isOwner ? 'Created by You' : `By ${p.creatorName}`}
+                    </p>
+                  </div>
+
+                  {/* Clean Non-Intrusive Button */}
                   <button
+                    type="button"
                     onClick={() => {
                       alert(`Dialogue with ${p.name} (Chat interface coming up next)`);
                     }}
-                    className="px-3.5 py-1.5 rounded-xl bg-stone-800 hover:bg-red-700 hover:text-white text-stone-200 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                    className="w-full py-2.5 px-3 rounded-xl bg-stone-900/90 hover:bg-red-700 border border-stone-800 hover:border-red-600 text-stone-200 hover:text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-lg hover:shadow-red-950/40 group/btn"
                   >
-                    <MessageSquare className="w-3.5 h-3.5" />
-                    <span>Chat</span>
+                    <MessageSquare className="w-3.5 h-3.5 text-red-400 group-hover/btn:text-white transition-colors" />
+                    <span>Start a conversation</span>
                   </button>
                 </div>
               </div>
@@ -325,6 +349,166 @@ export default function SagesPage() {
         </div>
       )}
 
+      {/* 4. Sage Details Info Modal */}
+      {detailsSage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg bg-[#111218] border border-stone-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-stone-800 bg-stone-950/60">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl border border-stone-800 bg-stone-900 overflow-hidden flex items-center justify-center flex-shrink-0">
+                  {detailsSage.avatar ? (
+                    <img
+                      src={detailsSage.avatar}
+                      alt={detailsSage.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <UserIcon className="w-5 h-5 text-stone-500" />
+                  )}
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-white leading-tight">
+                    {detailsSage.name}
+                  </h2>
+                  <p className="text-xs text-stone-400">
+                    Created by {user && detailsSage.creatorId === user.id ? 'You' : detailsSage.creatorName}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setDetailsSage(null)}
+                className="p-1.5 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-5">
+              {/* Status and Knowledge sources chips */}
+              <div className="flex items-center gap-2.5">
+                {detailsSage.status === 'APPROVED' ? (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <Globe className="w-3 h-3" />
+                    <span>Public Sage</span>
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-stone-900 text-stone-400 border border-stone-800">
+                    <Lock className="w-3 h-3" />
+                    <span>Private Sage</span>
+                  </span>
+                )}
+
+                <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-stone-900 text-stone-400 border border-stone-800">
+                  <BookOpen className="w-3 h-3 text-red-400" />
+                  <span>
+                    {detailsSage.sourcesCount > 0
+                      ? `${detailsSage.sourcesCount} authentic sources`
+                      : '0 knowledge sources attached'}
+                  </span>
+                </span>
+              </div>
+
+              {/* Biography */}
+              <div>
+                <h4 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
+                  Biography & Worldview
+                </h4>
+                <div className="p-4 rounded-xl bg-stone-950/70 border border-stone-800/80 text-stone-200 text-xs leading-relaxed font-serif-quote">
+                  {detailsSage.bio}
+                </div>
+              </div>
+
+              {/* Voice Tone */}
+              {detailsSage.voiceTone && (
+                <div>
+                  <h4 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
+                    Speaking Voice & Tone
+                  </h4>
+                  <div className="p-3 rounded-xl bg-stone-950/70 border border-stone-800/80 text-red-300 text-xs italic font-serif-quote">
+                    &ldquo;{detailsSage.voiceTone}&rdquo;
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-stone-800 bg-stone-950/40">
+              <button
+                type="button"
+                onClick={() => setDetailsSage(null)}
+                className="px-4 py-2 rounded-xl text-xs font-medium text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  alert(`Starting dialogue with ${detailsSage.name}...`);
+                  setDetailsSage(null);
+                }}
+                className="px-5 py-2 rounded-xl text-xs font-bold bg-red-700 hover:bg-red-600 text-white transition-all shadow-md shadow-red-950/40 flex items-center gap-1.5"
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span>Start a conversation</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-sm bg-[#111218] border border-stone-800 rounded-2xl shadow-2xl p-6 space-y-4">
+            <div className="w-10 h-10 rounded-xl bg-red-950/40 border border-red-500/20 flex items-center justify-center text-red-400">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+
+            <div>
+              <h3 className="text-sm font-bold text-white">
+                Delete &ldquo;{deleteTarget.name}&rdquo;?
+              </h3>
+              <p className="text-xs text-stone-400 mt-1 leading-relaxed">
+                This will permanently remove this sage and any attached knowledge sources. This
+                action cannot be undone.
+              </p>
+            </div>
+
+            {deleteError && (
+              <div className="p-3 text-xs rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
+                {deleteError}
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setDeleteTarget(null);
+                  setDeleteError(null);
+                }}
+                disabled={isDeleting}
+                className="px-4 py-2 rounded-xl text-xs font-medium text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteSage}
+                disabled={isDeleting}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-red-700 hover:bg-red-600 text-white transition-all flex items-center gap-1.5 disabled:opacity-50 shadow-md shadow-red-950/40"
+              >
+                {isDeleting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                <span>{isDeleting ? 'Deleting...' : 'Delete Sage'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -43,6 +43,21 @@ export const personalityContract = c.router(
       },
       description: 'Get details of a single personality by ID',
     },
+    delete: {
+      method: 'DELETE',
+      path: '/:id',
+      pathParams: z.object({
+        id: z.string(),
+      }),
+      body: c.noBody(),
+      responses: {
+        200: z.object({ success: z.boolean() }),
+        401: ErrorResponseSchema,
+        403: ErrorResponseSchema,
+        404: ErrorResponseSchema,
+      },
+      description: 'Delete a personality created by the current user',
+    },
   },
   {
     pathPrefix: '/personalities',

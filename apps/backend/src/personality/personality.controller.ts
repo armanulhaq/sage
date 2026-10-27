@@ -45,4 +45,16 @@ export class PersonalityController {
       };
     });
   }
+
+  @UseGuards(JwtAuthGuard)
+  @TsRestHandler(contract.personality.delete)
+  async delete(@CurrentUser() user: User) {
+    return tsRestHandler(contract.personality.delete, async ({ params }) => {
+      const response = await this.personalityService.delete(params.id, user.id);
+      return {
+        status: 200,
+        body: response,
+      };
+    });
+  }
 }

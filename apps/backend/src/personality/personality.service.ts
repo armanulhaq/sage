@@ -1,11 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
 import { Personality, PersonalityStatus } from './entities/personality.entity';
+import { PersonalityChunk } from './entities/personality-chunk.entity';
+import { PersonalitySource } from './entities/personality-source.entity';
 import { User } from '../user/entities/user.entity';
 import { CreatePersonalityInput, PersonalityResponse } from 'contract';
 
 @Injectable()
 export class PersonalityService {
+  private readonly logger = new Logger(PersonalityService.name);
+
   constructor(private readonly em: EntityManager) {}
 
   async create(
@@ -72,6 +76,33 @@ export class PersonalityService {
     }
 
     return this.serializePersonality(personality);
+  }
+
+  async delete(id: string, userId: string): Promise<{ success: boolean }> {
+    this.logger.log(`Attempting to delete personality ${id} by user ${userId}`);
+    const personality = await this.em.findOne(
+      Personality,
+      { id },
+      { populate: ['creator'] },
+    );
+
+    if (!personality) {
+      this.logger.warn(`Personality ${id} not found for deletion`);
+      throw new NotFoundException('Personality not found');
+    }
+
+    if (personality.creator.id !== userId) {
+      this.logger.warn(`Unauthorized delete attempt: Personality ${id} created by ${personality.creator.id}, requested by ${userId}`);
+      throw new ForbiddenException('You can only delete sages you created');
+    }
+
+    // Cascade delete any chunks and sources belonging to this personality
+    await this.em.nativeDelete(PersonalityChunk, { personality: id });
+    await this.em.nativeDelete(PersonalitySource, { personality: id });
+    await this.em.removeAndFlush(personality);
+
+    this.logger.log(`Successfully deleted personality ${id}`);
+    return { success: true };
   }
 
   private serializePersonality(personality: Personality): PersonalityResponse {
